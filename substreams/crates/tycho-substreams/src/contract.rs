@@ -88,9 +88,9 @@ fn extract_contract_changes_generic<
     inclusion_predicate: F,
     mut store_changes: G,
 ) {
-    if block.detail_level != Into::<i32>::into(DetailLevel::DetaillevelExtended) {
-        panic!("Only extended blocks are supported");
-    }
+    // if block.detail_level != Into::<i32>::into(DetailLevel::DetaillevelExtended) {
+    //     panic!("Only extended blocks are supported");
+    // }
     let mut changed_contracts: HashMap<Vec<u8>, InterimContractChange> = HashMap::new();
 
     block

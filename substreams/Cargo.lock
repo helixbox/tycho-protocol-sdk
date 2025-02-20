@@ -236,7 +236,7 @@ dependencies = [
  "prost-types 0.12.6",
  "substreams",
  "substreams-ethereum",
- "tycho-substreams 0.2.0 (git+https://github.com/propeller-heads/tycho-protocol-sdk.git?rev=b8aeaa3)",
+ "tycho-substreams 0.2.0",
 ]
 
 [[package]]

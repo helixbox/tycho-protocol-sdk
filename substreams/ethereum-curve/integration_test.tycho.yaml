@@ -1,7 +1,7 @@
-substreams_yaml_path: ./substreams.yaml
+substreams_yaml_path: ./ethereum-curve.yaml
 protocol_type_names:
   - "curve_pool"
-adapter_contract: "CurveAdapter"
+adapter_contract: "CurveSwapAdapter"
 skip_balance_check: true
 initialized_accounts:
 tests:

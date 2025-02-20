@@ -196,65 +196,65 @@ class TestRunner:
                                 f"from rpc call and {tycho_balance} from Substreams",
                             )
 
-            if not self.config.skip_balance_check:
-                print(f"\n✅ {step} passed.\n")
-            else:
-                print(f"\nℹ️ {step} skipped")
+                if not self.config.skip_balance_check:
+                    print(f"\n✅ {step} passed.\n")
+                else:
+                    print(f"\nℹ️ {step} skipped")
 
-            step = "Simulation validation"
+                step = "Simulation validation"
 
-            # Loads from Tycho-Indexer the state of all the contracts that are related to the protocol components.
-            filtered_components = []
-            simulation_components = [
-                c.id for c in expected_components if c.skip_simulation is False
-            ]
+                # Loads from Tycho-Indexer the state of all the contracts that are related to the protocol components.
+                filtered_components = []
+                simulation_components = [
+                    c.id for c in expected_components if c.skip_simulation is False
+                ]
 
-            related_contracts = set()
-            for account in self.config.initialized_accounts:
-                related_contracts.add(HexBytes(account))
-            for account in initialized_accounts:
-                related_contracts.add(HexBytes(account))
+                related_contracts = set()
+                for account in self.config.initialized_accounts or []:
+                    related_contracts.add(HexBytes(account))
+                for account in initialized_accounts or []:
+                    related_contracts.add(HexBytes(account))
 
-            # Filter out components that are not set to be used for the simulation
-            component_related_contracts = set()
-            for component in protocol_components:
-                if component.id in simulation_components:
-                    for a in component.contract_ids:
-                        component_related_contracts.add(a)
-                    filtered_components.append(component)
+                # Filter out components that are not set to be used for the simulation
+                component_related_contracts = set()
+                for component in protocol_components:
+                    if component.id in simulation_components:
+                        for a in component.contract_ids:
+                            component_related_contracts.add(a)
+                        filtered_components.append(component)
 
-            # Check if any of the initialized contracts are not listed as component contract dependencies
-            unspecified_contracts = related_contracts - component_related_contracts
-            if len(unspecified_contracts):
-                print(
-                    f"⚠️ The following initialized contracts are not listed as component contract dependencies: {unspecified_contracts}. "
-                    f"Please ensure that, if they are required for this component's simulation, they are specified under the Protocol Component's contract field."
+                # Check if any of the initialized contracts are not listed as component contract dependencies
+                unspecified_contracts = related_contracts - component_related_contracts
+                if len(unspecified_contracts):
+                    print(
+                        f"⚠️ The following initialized contracts are not listed as component contract dependencies: {unspecified_contracts}. "
+                        f"Please ensure that, if they are required for this component's simulation, they are specified under the Protocol Component's contract field."
+                    )
+
+                related_contracts.update(component_related_contracts)
+                related_contracts = [a.hex() for a in related_contracts]
+
+                contract_states = self.tycho_rpc_client.get_contract_state(
+                    ContractStateParams(contract_ids=related_contracts)
                 )
-
-            related_contracts.update(component_related_contracts)
-            related_contracts = [a.hex() for a in related_contracts]
-
-            contract_states = self.tycho_rpc_client.get_contract_state(
-                ContractStateParams(contract_ids=related_contracts)
-            )
-            if len(filtered_components):
-                simulation_failures = self.simulate_get_amount_out(
-                    stop_block, protocol_states, filtered_components, contract_states
-                )
-                if len(simulation_failures):
-                    error_msgs = []
-                    for pool_id, failures in simulation_failures.items():
-                        failures_ = [
-                            f"{f.sell_token} -> {f.buy_token}: {f.error}"
-                            for f in failures
-                        ]
-                        error_msgs.append(
-                            f"Pool {pool_id} failed simulations: {', '.join(failures_)}"
-                        )
-                    return TestResult.Failed(step=step, message="/n".join(error_msgs))
-                print(f"\n✅ {step} passed.\n")
-            else:
-                print(f"\nℹ️ {step} skipped")
+                if len(filtered_components):
+                    simulation_failures = self.simulate_get_amount_out(
+                        stop_block, protocol_states, filtered_components, contract_states
+                    )
+                    if len(simulation_failures):
+                        error_msgs = []
+                        for pool_id, failures in simulation_failures.items():
+                            failures_ = [
+                                f"{f.sell_token} -> {f.buy_token}: {f.error}"
+                                for f in failures
+                            ]
+                            error_msgs.append(
+                                f"Pool {pool_id} failed simulations: {', '.join(failures_)}"
+                            )
+                        return TestResult.Failed(step=step, message="/n".join(error_msgs))
+                    print(f"\n✅ {step} passed.\n")
+                else:
+                    print(f"\nℹ️ {step} skipped")
             return TestResult.Passed()
         except Exception as e:
             error_message = f"An error occurred: {str(e)}\n" + traceback.format_exc()

@@ -1,6 +1,7 @@
 import os
 
 from web3 import Web3
+from web3.middleware import geth_poa_middleware
 
 native_aliases = [
     "0x0000000000000000000000000000000000000000",
@@ -52,6 +53,7 @@ def get_block_header(block_number):
         raise EnvironmentError("RPC_URL environment variable not set")
 
     web3 = Web3(Web3.HTTPProvider(rpc_url))
+    web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
     if not web3.isConnected():
         raise ConnectionError("Failed to connect to the Ethereum node")
